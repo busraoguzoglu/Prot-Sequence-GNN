@@ -16,7 +16,7 @@ from IPython.display import display, HTML
 def main():
 
     protein_interactions_train = pd.read_csv(
-        'created_tables/seq_to_seq_train.csv',
+        'created_tables/setup1/seq_to_seq_train.csv',
         sep="\t",  # tab-separated
         header=None,  # no heading row
         names=["target", "source"]  # set our own names for the columns
@@ -24,7 +24,7 @@ def main():
     protein_interactions_train = protein_interactions_train.iloc[1:, :]
 
     protein_interactions_train_labels = pd.read_csv(
-        'created_tables/seq_to_seq_train_withlabels.csv',
+        'created_tables/setup1/seq_to_seq_train_withlabels.csv',
         sep="\t",  # tab-separated
         header=None,  # no heading row
         names=["target", "source", "weight"]  # set our own names for the columns
@@ -32,7 +32,7 @@ def main():
     protein_interactions_train_labels = protein_interactions_train_labels.iloc[1:, :]
 
     protein_interactions_test = pd.read_csv(
-        'created_tables/seq_to_seq_test.csv',
+        'created_tables/setup1/seq_to_seq_test.csv',
         sep="\t",  # tab-separated
         header=None,  # no heading row
         names=["target", "source"]  # set our own names for the columns
@@ -40,7 +40,7 @@ def main():
     protein_interactions_test = protein_interactions_test.iloc[1:, :]
 
     protein_interactions_test_labels = pd.read_csv(
-        'created_tables/seq_to_seq_test_withlabels.csv',
+        'created_tables/setup1/seq_to_seq_test_withlabels.csv',
         sep="\t",  # tab-separated
         header=None,  # no heading row
         names=["target", "source", "weight"]  # set our own names for the columns
@@ -65,15 +65,14 @@ def main():
     #protein_interactions = protein_interactions.sample(frac=1)
 
     protein_word_content = pd.read_csv(
-        'created_tables/seq_to_word.csv',
+        'created_tables/setup1/seq_to_word.csv',
         sep="\t",  # tab-separated
         header=None,  # no heading row
     )
 
-    protein_word_content = protein_word_content.iloc[1:, :]
-    protein_word_content = protein_word_content.astype(int)
+    #protein_word_content = protein_word_content.iloc[1:, :]
+    #protein_word_content = protein_word_content.astype(int)
 
-    '''
     # Words as features
 
     protein_word_content = protein_word_content.rename(columns={0: 'id'})
@@ -82,10 +81,7 @@ def main():
 
     protein_word_content = protein_word_content.iloc[1:, :]
 
-    '''
-
-    # protein_interactions = protein_interactions.drop(['weight'], axis=1
-
+    #protein_interactions = protein_interactions.drop(['weight'], axis=1)
     print('protein_word_content: ', protein_word_content)
 
     protein_interactions_train_2 = protein_interactions_train[0:5]
