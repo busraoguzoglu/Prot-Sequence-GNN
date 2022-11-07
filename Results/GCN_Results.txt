@@ -1,0 +1,16 @@
+GCN Results:
+
+1- Prot nodes, prot-prot connection. Words as features 1-0 file (same as connecting an edge) (link_pred.py - setup 1)
+
+100 epoch 2 layer (512-512) lr = 0.001
+
+Train Set Metrics of the trained model:
+        loss: 0.4555
+        binary_accuracy: 0.9622
+
+Test Set Metrics of the trained model:
+        loss: 0.6047
+        binary_accuracy: 0.8127
+
+2- Prot nodes, prot-prot connection. Words as edge list file no filter (if appears add to edge list file)
+
