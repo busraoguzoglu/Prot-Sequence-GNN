@@ -1,0 +1,31 @@
+GCN Results:
+
+1- Prot nodes, prot-prot connection. Words as features 1-0 file (same as connecting an edge)
+
+	GCN: 100 epoch 2 layer (512-512) lr = 0.001
+
+	Train Set Metrics of the trained model:
+			loss: 0.4555
+			binary_accuracy: 0.9622
+
+	Test Set Metrics of the trained model:
+			loss: 0.6047
+			binary_accuracy: 0.8127
+
+2- Prot nodes, prot-prot connection, word nodes, word-prot connection links with no weight
+
+	Node2Vec via Embedding Vectors: Bad results, around 0.5 ROCAUC
+	Metapath2Vec via Embedding Vectors: Bad results, around 0.6 ROCAUC
+	
+	- These results may need debugging, could be improved maybe
+
+3- Prot nodes, prot-prot connection, word nodes, word-prot connection links with weights (tf-idf)
+
+4- Prot nodes, prot-prot connection, word nodes, word-prot connection links with no weight, links filtered (tf-idf > x)
+
+5- Prot nodes, prot-prot connection. Words as features tf-idf file
+	
+	GCN:
+
+Documentation:
+https://stellargraph.readthedocs.io/en/stable/demos/#find-a-demo-for-an-algorithm
