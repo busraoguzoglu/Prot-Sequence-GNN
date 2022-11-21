@@ -283,7 +283,7 @@ def main():
 
     print('train_X shape:', train_X.shape)
 
-    for i in range(5):
+    for i in range(10):
         # Model:
         tf.keras.backend.clear_session()
         model = tf.keras.Sequential()
@@ -338,14 +338,14 @@ def main():
         aucs.append(auc)
         f1s.append(f1)
 
-    recall = sum(recalls)/5
-    spec = sum(specs)/5
-    npv = sum(npvs)/5
-    acc = sum(accs)/5
-    prec = sum(precs)/5
-    mcc = sum(mccs)/5
-    auc = sum(aucs)/5
-    f1 = sum(f1s)/5
+    recall = sum(recalls)/10
+    spec = sum(specs)/10
+    npv = sum(npvs)/10
+    acc = sum(accs)/10
+    prec = sum(precs)/10
+    mcc = sum(mccs)/10
+    auc = sum(aucs)/10
+    f1 = sum(f1s)/10
 
     print("Sensitivity: %.4f, Specificity: %.4f, Accuracy: %.4f, PPV: %.4f, NPV: %.4f, AUC: %.4f ,MCC: %.4f, F1: %.4f" \
           % (recall * 100, spec * 100, acc * 100, prec * 100, npv * 100, auc, mcc, f1 * 100))
