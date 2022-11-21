@@ -42,7 +42,7 @@ def get_predictions(y_pred_value):
 def create_graph():
 
     protein_word_content = pd.read_csv(
-        'created_tables/setup4/seq_to_word.csv',
+        'created_tables/setup4_2/seq_to_word_filtered.csv',
         sep="\t",  # tab-separated
         header=None,  # no heading row
     )
@@ -54,7 +54,7 @@ def create_graph():
     print('Protein word content: (edges)', protein_word_content)
 
     protein_interactions_train_labels = pd.read_csv(
-        'created_tables/setup4/seq_to_seq_train_withlabels.csv',
+        'created_tables/setup4_2/seq_to_seq_train_withlabels.csv',
         sep="\t",  # tab-separated
         header=None,  # no heading row
         names=["source", "target", "interaction_type"]  # set our own names for the columns
@@ -72,23 +72,26 @@ def create_graph():
 
     print('protein_interactions_train_labels:', protein_interactions_train_labels)
 
+    #interacts = protein_interactions_train_labels[protein_interactions_train_labels['interaction_type'] == 1]
+    #not_interacts = protein_interactions_train_labels[protein_interactions_train_labels['interaction_type'] == 0]
+
 #########################################################################################
 
     # Get human, virus and word indexes:
     hum_ids = pd.read_csv(
-        'created_tables/setup4/all_seq_id_human.csv',
+        'created_tables/setup4_2/all_seq_id_human.csv',
         sep="\t",  # tab-separated
     )
     hum = hum_ids['id'].tolist()
 
     vir_ids = pd.read_csv(
-        'created_tables/setup4/all_seq_id_virus.csv',
+        'created_tables/setup4_2/all_seq_id_virus.csv',
         sep="\t",  # tab-separated
     )
     vir = vir_ids['id'].tolist()
 
     word_ids = pd.read_csv(
-        'created_tables/setup4/all_word_id.csv',
+        'created_tables/setup4_2/all_word_id.csv',
         sep="\t",  # tab-separated
     )
     word = word_ids['id'].tolist()
@@ -99,21 +102,17 @@ def create_graph():
     word_nodes = IndexedArray(index=word)
 
     # Create edges
+    protein_graph = StellarGraph({"human": hum_nodes, "virus": vir_nodes, "word": word_nodes},
+                                 edges={'contains': protein_word_content, 'interacts': protein_interactions_train_labels})
 
-    #protein_graph = StellarGraph({"human": hum_nodes, "virus": vir_nodes, "word": word_nodes},
-    #                             edges={'contains': protein_word_content, 'interacts': protein_interactions_train_labels})
-
-    protein_graph = StellarGraph({"human": hum_nodes, "virus": vir_nodes},
-                                 edges={'interacts': protein_interactions_train_labels})
     print(protein_graph.info())
     return protein_graph
 
 def get_node_embeddings(g):
-    walk_length = 200  # maximum length of a random walk to use throughout this notebook
+    walk_length = 250  # maximum length of a random walk to use throughout this notebook
 
     # specify the metapath schemas as a list of lists of node types.
 
-    """
     metapaths = [
         ["human", "word", "human"],
         ["virus", "word", "virus"],
@@ -123,11 +122,6 @@ def get_node_embeddings(g):
         ["virus", "human", "virus", "word", "virus"],
         ["human", "word", "human", "virus", "human"],
         ["virus", "word", "virus", "human", "virus"]
-    ]
-"""
-    metapaths = [
-        ["human", "virus", "human"],
-        ["virus", "human", "virus"]
     ]
 
     # Create the random walker
@@ -164,7 +158,7 @@ def get_node_embeddings(g):
 def get_train_test(node_embeddings):
 
     protein_interactions_train = pd.read_csv(
-        'created_tables/setup2/seq_to_seq_train_withlabels.csv',
+        'created_tables/setup4_2/seq_to_seq_train_withlabels.csv',
         sep="\t",  # tab-separated
         header=None,  # no heading row
         names=["protein_sequence1", "protein_sequence2", "label"]  # set our own names for the columns
@@ -174,7 +168,7 @@ def get_train_test(node_embeddings):
     protein_interactions_train = protein_interactions_train[0:9229]
 
     protein_interactions_test = pd.read_csv(
-        'created_tables/setup2/seq_to_seq_test_withlabels.csv',
+        'created_tables/setup4_2/seq_to_seq_test_withlabels.csv',
         sep="\t",  # tab-separated
         header=None,  # no heading row
         names=["protein_sequence1", "protein_sequence2", "label"]  # set our own names for the columns
@@ -344,24 +338,14 @@ def main():
         aucs.append(auc)
         f1s.append(f1)
 
-    # model = tf.keras.models.load_model('denovo_models/bestmodel')
-
-    y_true = test_Y
-    # y_pred_label = clf.predict(test_X)
-    y_pred_label = model.predict(test_X)
-    y_pred_label = get_predictions(y_pred_label)
-
-    print(y_pred_label)
-
-    tn, fp, fn, tp = confusion_matrix(y_true, y_pred_label).ravel()
-    recall = recall_score(y_true, y_pred_label)
-    spec = tn / (tn + fp)
-    npv = tn / (tn + fn)
-    acc = accuracy_score(y_true, y_pred_label)
-    prec = precision_score(y_true, y_pred_label)
-    mcc = matthews_corrcoef(y_true, y_pred_label)
-    auc = roc_auc_score(y_true, y_pred_label)
-    f1 = 2 * prec * recall / (prec + recall)
+    recall = sum(recalls)/5
+    spec = sum(specs)/5
+    npv = sum(npvs)/5
+    acc = sum(accs)/5
+    prec = sum(precs)/5
+    mcc = sum(mccs)/5
+    auc = sum(aucs)/5
+    f1 = sum(f1s)/5
 
     print("Sensitivity: %.4f, Specificity: %.4f, Accuracy: %.4f, PPV: %.4f, NPV: %.4f, AUC: %.4f ,MCC: %.4f, F1: %.4f" \
           % (recall * 100, spec * 100, acc * 100, prec * 100, npv * 100, auc, mcc, f1 * 100))
