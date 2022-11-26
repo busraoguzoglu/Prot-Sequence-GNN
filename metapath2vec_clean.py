@@ -42,7 +42,7 @@ def get_predictions(y_pred_value):
 def create_graph():
 
     protein_word_content = pd.read_csv(
-        'created_tables/setup4_2/seq_to_word_filtered.csv',
+        'created_tables/setup5/seq_to_word_filtered.csv',
         sep="\t",  # tab-separated
         header=None,  # no heading row
     )
@@ -54,7 +54,7 @@ def create_graph():
     print('Protein word content: (edges)', protein_word_content)
 
     protein_interactions_train_labels = pd.read_csv(
-        'created_tables/setup4_2/seq_to_seq_train_withlabels.csv',
+        'created_tables/setup5/seq_to_seq_train_withlabels.csv',
         sep="\t",  # tab-separated
         header=None,  # no heading row
         names=["source", "target", "interaction_type"]  # set our own names for the columns
@@ -75,23 +75,45 @@ def create_graph():
     #interacts = protein_interactions_train_labels[protein_interactions_train_labels['interaction_type'] == 1]
     #not_interacts = protein_interactions_train_labels[protein_interactions_train_labels['interaction_type'] == 0]
 
+    # Get word-word edges, make their id unique:
+    # First edge id should be 530100
+
+    word_word_edges = pd.read_csv(
+        'created_tables/setup5/word_to_word_edges.csv',
+        sep="\t",  # tab-separated
+        header=None,  # no heading row
+        names=["source", "target"]  # set our own names for the columns
+    )
+
+    word_word_edges = word_word_edges.iloc[1:, :]
+
+    # Need to make all edges have unique id
+    word_word_edges_index = []
+    for i in range(len(word_word_edges)):
+        word_word_edges_index.append(i + 530100)
+
+    word_word_edges['index'] = word_word_edges_index
+    word_word_edges.set_index(['index'], inplace=True)
+    word_word_edges = word_word_edges.astype(int)
+    print('word_word_edges:', word_word_edges)
+
 #########################################################################################
 
     # Get human, virus and word indexes:
     hum_ids = pd.read_csv(
-        'created_tables/setup4_2/all_seq_id_human.csv',
+        'created_tables/setup5/all_seq_id_human.csv',
         sep="\t",  # tab-separated
     )
     hum = hum_ids['id'].tolist()
 
     vir_ids = pd.read_csv(
-        'created_tables/setup4_2/all_seq_id_virus.csv',
+        'created_tables/setup5/all_seq_id_virus.csv',
         sep="\t",  # tab-separated
     )
     vir = vir_ids['id'].tolist()
 
     word_ids = pd.read_csv(
-        'created_tables/setup4_2/all_word_id.csv',
+        'created_tables/setup5/all_word_id.csv',
         sep="\t",  # tab-separated
     )
     word = word_ids['id'].tolist()
@@ -103,7 +125,7 @@ def create_graph():
 
     # Create edges
     protein_graph = StellarGraph({"human": hum_nodes, "virus": vir_nodes, "word": word_nodes},
-                                 edges={'contains': protein_word_content, 'interacts': protein_interactions_train_labels})
+                                 edges={'contains': protein_word_content, 'interacts': protein_interactions_train_labels, 'pmi': word_word_edges})
 
     print(protein_graph.info())
     return protein_graph
@@ -121,7 +143,9 @@ def get_node_embeddings(g):
         ["human", "virus", "human", "word", "human"],
         ["virus", "human", "virus", "word", "virus"],
         ["human", "word", "human", "virus", "human"],
-        ["virus", "word", "virus", "human", "virus"]
+        ["virus", "word", "virus", "human", "virus"],
+        ["human", "word", "word", "human"],
+        ["virus", "word", "word", "virus"],
     ]
 
     # Create the random walker
@@ -130,13 +154,13 @@ def get_node_embeddings(g):
     walks = rw.run(
         nodes=list(g.nodes()),  # root nodes
         length=walk_length,  # maximum length of a random walk
-        n=1,  # number of random walks per root node
+        n=4,  # number of random walks per root node
         metapaths=metapaths,  # the metapaths
     )
 
     print("Number of random walks: {}".format(len(walks)))
 
-    model = Word2Vec(walks, vector_size=128, window=10, min_count=0, sg=1, workers=2, epochs=1)
+    model = Word2Vec(walks, vector_size=256, window=10, min_count=0, sg=1, workers=2, epochs=1)
 
     # Retrieve node embeddings and corresponding subjects
     node_ids = model.wv.index_to_key  # list of node IDs
@@ -158,7 +182,7 @@ def get_node_embeddings(g):
 def get_train_test(node_embeddings):
 
     protein_interactions_train = pd.read_csv(
-        'created_tables/setup4_2/seq_to_seq_train_withlabels.csv',
+        'created_tables/setup5/seq_to_seq_train_withlabels.csv',
         sep="\t",  # tab-separated
         header=None,  # no heading row
         names=["protein_sequence1", "protein_sequence2", "label"]  # set our own names for the columns
@@ -168,7 +192,7 @@ def get_train_test(node_embeddings):
     protein_interactions_train = protein_interactions_train[0:9229]
 
     protein_interactions_test = pd.read_csv(
-        'created_tables/setup4_2/seq_to_seq_test_withlabels.csv',
+        'created_tables/setup5/seq_to_seq_test_withlabels.csv',
         sep="\t",  # tab-separated
         header=None,  # no heading row
         names=["protein_sequence1", "protein_sequence2", "label"]  # set our own names for the columns
@@ -287,13 +311,14 @@ def main():
         # Model:
         tf.keras.backend.clear_session()
         model = tf.keras.Sequential()
-        model.add(Input(shape=(256,)))
-        model.add(Dense(128, activation='relu'))
+        model.add(Input(shape=(512,)))
+        model.add(Dense(256, activation='relu'))
         model.add(Dropout(0.2))
         model.add(Dense(64))
         model.add(Activation('relu'))
-        # model.add(Dropout(0.2))
-        model.add(Dense(16))
+        model.add(Dropout(0.2))
+        model.add(Dense(32))
+        model.add(Activation('relu'))
         model.add(Dense(1))
         model.add(Activation('sigmoid'))
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
@@ -338,14 +363,15 @@ def main():
         aucs.append(auc)
         f1s.append(f1)
 
-    recall = sum(recalls)/10
-    spec = sum(specs)/10
-    npv = sum(npvs)/10
-    acc = sum(accs)/10
-    prec = sum(precs)/10
-    mcc = sum(mccs)/10
-    auc = sum(aucs)/10
-    f1 = sum(f1s)/10
+    count = 10
+    recall = sum(recalls)/count
+    spec = sum(specs)/count
+    npv = sum(npvs)/count
+    acc = sum(accs)/count
+    prec = sum(precs)/count
+    mcc = sum(mccs)/count
+    auc = sum(aucs)/count
+    f1 = sum(f1s)/count
 
     print("Sensitivity: %.4f, Specificity: %.4f, Accuracy: %.4f, PPV: %.4f, NPV: %.4f, AUC: %.4f ,MCC: %.4f, F1: %.4f" \
           % (recall * 100, spec * 100, acc * 100, prec * 100, npv * 100, auc, mcc, f1 * 100))
