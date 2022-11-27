@@ -1,8 +1,8 @@
 GCN Results:
 
-1- Prot nodes, prot-prot connection. Words as features 1-0 file (same as connecting an edge)
+1- Prot nodes, prot-prot connection. Words as features 1-0 file
 
-	GCN: 100 epoch 2 layer (512-512) lr = 0.001
+	*GCN: 100 epoch 2 layer (512-512) lr = 0.001
 
 	Train Set Metrics of the trained model:
 			loss: 0.4555
@@ -11,6 +11,16 @@ GCN Results:
 	Test Set Metrics of the trained model:
 			loss: 0.6047
 			binary_accuracy: 0.8127
+			
+	*GraphSAGE: layer_sizes = [50, 50], epochs = 20, lr=1e-3, batch_size = 20, num_samples = [20, 10]
+	
+	Train Set Metrics of the trained model:
+        loss: 0.2063
+        acc: 0.9152
+
+	Test Set Metrics of the trained model:
+			loss: 0.8209
+			acc: 0.8257
 
 2- Prot nodes, prot-prot connection, word nodes, word-prot connection links with no weight
 
@@ -21,6 +31,15 @@ GCN Results:
 
 3- Prot nodes, prot-prot connection, word nodes, word-prot connection links with weights (tf-idf)
 
+	Very bad results:
+	Train Set Metrics of the trained model:
+			loss: 0.3209
+			binary_accuracy: 0.8718
+
+	Test Set Metrics of the trained model:
+			loss: 0.8215
+			binary_accuracy: 0.74791
+
 4- Prot nodes, prot-prot connection, word nodes, word-prot connection links with no weight, links filtered (tf-idf > x)
 
 5- Prot nodes, prot-prot connection. Words as features tf-idf file
@@ -29,3 +48,186 @@ GCN Results:
 
 Documentation:
 https://stellargraph.readthedocs.io/en/stable/demos/#find-a-demo-for-an-algorithm
+
+
+
+*******************************
+
+- GCN tfidf ile filtreleme (Metapath2Vec falan sal), hetero graph oluşuturyor muyuz onu kontrol et.
+
+TFIDF filte words as features valuelar tfidf: (biggest 500 tfidfli word alındığında):
+
+GCN:
+
+	Train Set Metrics of the trained model:
+			loss: 0.3219
+			binary_accuracy: 0.8687
+
+	Test Set Metrics of the trained model:
+			loss: 0.8715
+			binary_accuracy: 0.7974
+
+- SeqVec ile sequencedan feature çıkar bunu proteinin featurei yap gcne at.
+
+GCN:
+
+	Train Set Metrics of the trained model:
+			loss: 0.1469
+			binary_accuracy: 0.9349
+
+	Test Set Metrics of the trained model:
+			loss: 0.8495
+			binary_accuracy: 0.7762
+		
+GAT:
+
+	Train Set Metrics of the trained model:
+			loss: 0.4814
+			binary_accuracy: 0.7842
+
+	Test Set Metrics of the trained model:
+			loss: 0.5816
+			binary_accuracy: 0.7350
+			
+
+
+- HINSAGE hetero graph:
+
+https://stellargraph.readthedocs.io/en/stable/demos/link-prediction/hinsage-link-prediction.html
+
+***************************************************************************************************
+
+- make 'interacts' and 'not interacts' two different edge types
+neyi predict ediyor şuan emin değilim??
+
+edge typei predict etmesini istiyorum (yada edge in bi attribute u?)
+
+binary classification olmadığı durumlarda bu graph işi düzgün çalışıyor gibi, benim problemi oluşturma kısmımda mı bir problem var?
+
+- 
+
+Setup 4:
+
+virüs insan diye iki farklı node tipi olarak ayır proteinleri her şeyi öyle dene.
+link olmama durumunu link var ama 0 durumundan ayıramıyor olabilir? hepsine link koyup öyle denemeye çalışalım.
+link weightleri yada labelları 1-0 olsun ilişki durumuna göre.
+metapathte nodeların arasına ilişki koyup dene (pytorhctan dolayı)
+
+-----------------------------------------------------------------------------------------------------------------
+
+- Metapath2vec + 3 layer sequential as classifier: (metapath clean file, setup4_2, epochs=300, batchsize=128)
+
+with word-sequence edges: (520346 edge)
+Sensitivity: 78.3529, Specificity: 79.7170, Accuracy: 79.0342, PPV: 79.4749, NPV: 78.6047, AUC: 0.7903 ,MCC: 0.5807, F1: 78.9100
+
+without word-sequence edges: (0 edge)
+Sensitivity: 67.2941, Specificity: 76.8868, Accuracy: 72.0848, PPV: 74.4792, NPV: 70.1075, AUC: 0.7209 ,MCC: 0.4438, F1: 70.7046
+
+with word-sequence edges filtered by tfidf: (first 250 words) (135254 edge)
+Sensitivity: 75.1059, Specificity: 93.3491, Accuracy: 84.2167, PPV: 91.8908, NPV: 78.9132, AUC: 0.8423 ,MCC: 0.6962, F1: 82.6490
+
+with word-sequence edges filtered by tfidf: (first 500 words) (193300 edge)
+Sensitivity: 73.1294, Specificity: 93.0189, Accuracy: 83.0624, PPV: 91.3098, NPV: 77.5542, AUC: 0.8307 ,MCC: 0.6749, F1: 81.2079
+
+with word-sequence edges filtered by tfidf: (first 750 words) (284050 edge)
+Sensitivity: 75.9059, Specificity: 92.6887, Accuracy: 84.2874, PPV: 91.2152, NPV: 79.3653, AUC: 0.8430 ,MCC: 0.6958, F1: 82.8435
+
+with word-sequence edges filtered by tfidf: (first 1000 words) (300509 edge)
+Sensitivity: 73.3647, Specificity: 90.9906, Accuracy: 82.1673, PPV: 89.1261, NPV: 77.3638, AUC: 0.8218 ,MCC: 0.6541, F1: 80.4382
+
+with word-sequence edges filtered by tfidf: (first 10 to 750 words) (273458 edge)
+Sensitivity: 74.6824, Specificity: 91.1321, Accuracy: 82.8975, PPV: 89.3958, NPV: 78.2598, AUC: 0.8291 ,MCC: 0.6673, F1: 81.3597
+
+with word-sequence edges filtered by tfidf: (first 20 to 750 words) (263439 edge)
+Sensitivity: 76.0000, Specificity: 93.2311, Accuracy: 84.6054, PPV: 91.8563, NPV: 79.5429, AUC: 0.8462 ,MCC: 0.7031, F1: 83.1422
+
+with word-sequence edges filtered by tfidf: (first 50 to 750 words) (239276 edge)
+Sensitivity: 75.6235, Specificity: 89.6698, Accuracy: 82.6384, PPV: 88.0273, NPV: 78.5987, AUC: 0.8265 ,MCC: 0.6596, F1: 81.3423
+
+--------- More with best (with word-sequence edges filtered by tfidf: (first 20 to 750 words) (263439 edge))
+
+batch_size = 128 -> 64:
+
+
+-- To improve sensitivity:
+
+Downsample: remove positive examples from your training set.
+
+Upsample: resample with replacement from the negative examples.
+
+Change the loss function: you can use a loss function that optimizes for F1 score, for example.
+
+**TRY THIS**Change the classification decision: if your model outputs a confidence score between 0 and 1, you can use the ROC curve to pick a threshold past which an example is classified as positive. You can choose this threshold based on your preferred tradeoff between the true positive and false positive rates.
+
+To do this need to create a valid set from train set to set the threshold. (Need to do it for tf-idf also)
+
+
+Use a boosted model: like a gradient boosted decision tree.
+
+Create synthetic data: slightly modify negative samples to create new ones.
+
+Reframe as anomaly detection: treat the problem as identifying outliers and classifying them as the negative class.
+
+----------------
+
+Threshold as 0.4: (Bunu validationa dayandırmam gerekiyor. Değişiklik yok gibi.) 
+
+Sensitivity: 76.7294, Specificity: 92.2642, Accuracy: 84.4876, PPV: 90.9096, NPV: 79.8434, AUC: 0.8450 ,MCC: 0.6987, F1: 83.1939
+
+Threshold as 0.1 (crazy..): 
+
+Sensitivity: 81.5529, Specificity: 88.2075, Accuracy: 84.8763, PPV: 87.4531, NPV: 82.7114, AUC: 0.8488 ,MCC: 0.6996, F1: 84.3650
+
+------------------
+
+Adding PMI:
+
+no PMI:
+Sensitivity: 74.3529, Specificity: 93.3962, Accuracy: 83.8634, PPV: 91.9006, NPV: 78.4345, AUC: 0.8387 ,MCC: 0.6903, F1: 82.1774
+
+
+PMI: (word-word added to metapath)
+Sensitivity: 76.5176, Specificity: 91.3679, Accuracy: 83.9340, PPV: 89.9113, NPV: 79.5691, AUC: 0.8394 ,MCC: 0.6868, F1: 82.6379
+
+
+PMI: (["human", "word", "word", "human"],
+        ["virus", "word", "word", "virus"], added to metapath, no word-word)
+Sensitivity: 76.9882, Specificity: 89.7642, Accuracy: 83.3687, PPV: 88.3209, NPV: 79.5759, AUC: 0.8338 ,MCC: 0.6732, F1: 82.2469
+
+
+PMI Cutoff 12 tfidf cutoff 750:
+Sensitivity: 78.1647, Specificity: 91.8868, Accuracy: 85.0177, PPV: 90.7197, NPV: 80.8492, AUC: 0.8503 ,MCC: 0.7080, F1: 83.9022
+
+*PMI Cutoff 13 tfidf cutoff 750:
+*Sensitivity: 77.8353, Specificity: 94.9528, Accuracy: 86.3840, PPV: 93.9756, NPV: 81.0988, AUC: 0.8639 ,MCC: 0.7392, F1: 85.1011
+
+PMI Cutoff 13 tfidf cutoff 250:
+Sensitivity: 76.2353, Specificity: 94.6698, Accuracy: 85.4417, PPV: 93.4998, NPV: 79.9088, AUC: 0.8545 ,MCC: 0.7215, F1: 83.9765
+
+PMI Cutoff 13.5 tfidf cutoff 250:
+Sensitivity: 76.0000, Specificity: 93.5849, Accuracy: 84.7821, PPV: 92.2493, NPV: 79.5725, AUC: 0.8479 ,MCC: 0.7069, F1: 83.3227
+
+PMI Cutoff 14 tfidf cutoff 250:
+Sensitivity: 74.6824, Specificity: 95.5660, Accuracy: 85.1119, PPV: 94.4134, NPV: 79.0199, AUC: 0.8512 ,MCC: 0.7182, F1: 83.3934
+
+PMI Cutoff 14 tfidf cutoff 150:
+Sensitivity: 78.0235, Specificity: 92.2642, Accuracy: 85.1355, PPV: 91.0129, NPV: 80.7437, AUC: 0.8514 ,MCC: 0.7102, F1: 84.0062
+
+PMI Cutoff 14 tfidf cutoff 100:
+Sensitivity: 75.8588, Specificity: 93.9623, Accuracy: 84.8999, PPV: 92.6910, NPV: 79.5513, AUC: 0.8491 ,MCC: 0.7102, F1: 83.4018
+
+PMI Cutoff 14.2 tfidf cutoff 250:
+Sensitivity: 74.9647, Specificity: 93.4434, Accuracy: 84.1932, PPV: 92.0346, NPV: 78.8571, AUC: 0.8420 ,MCC: 0.6964, F1: 82.5938
+
+Random walk x2:
+Sensitivity: 79.6706, Specificity: 94.0094, Accuracy: 86.8316, PPV: 93.0418, NPV: 82.2107, AUC: 0.8684 ,MCC: 0.7446, F1: 85.8206
+
+Random walk x3:
+Sensitivity: 79.4353, Specificity: 94.6934, Accuracy: 87.0554, PPV: 93.7722, NPV: 82.1344, AUC: 0.8706 ,MCC: 0.7501, F1: 85.9988
+
+Random walk x4:
+Sensitivity: 77.9529, Specificity: 96.0613, Accuracy: 86.9965, PPV: 95.2376, NPV: 81.3376, AUC: 0.8701 ,MCC: 0.7528, F1: 85.7003
+
+----------------------------------
+Protein-word ve word-word edgeleri yerine proteinlerin arasına onların benzerliğine bağlı bir edge ekleyelim.
+?Benzerlik neye göre nasıl hesaplanabilir?
