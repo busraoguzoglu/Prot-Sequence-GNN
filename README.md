@@ -8,6 +8,6 @@ metapath2vec_clean -> metapath embeddings + 3 layer sequential classifier (Files
 
 metapath2vec_clean td-idf version -> Files in setup 4_2
 
-metapath2vec_clean tf-idf + PMI version -> Files in setup 5
+*metapath2vec_clean tf-idf + PMI version -> Files in setup 5 (stellar_gcn environment)
 
-pytorch_metapath -> prot-prot pytorch metapath + classifier 3 layer tensorflow
+*pytorch_metapath -> prot-prot pytorch metapath + classifier 3 layer tensorflow (metapath environment, tf environment for classifier)
