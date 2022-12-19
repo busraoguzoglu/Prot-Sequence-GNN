@@ -43,6 +43,7 @@ def seq_to_id_with_types(train_frames, test_frames):
     train_sequences = []
     test_sequences = []
 
+
     for index, row in train_frames.iterrows():
         sequence1 = row['protein_sequence1']
         sequence2 = row['protein_sequence2']
@@ -500,7 +501,7 @@ def arrange_by_tfidf():
 
     # Sequence-word count:
     protein_word_counts = pd.read_csv(
-        'created_tables/clean_metapath/seq_to_word_counts.csv',
+        'created_tables/clean_metapath/seq_to_word_counts_novalid2.csv',
         sep="\t",  # tab-separated
         header=None,  # no heading row
     )
@@ -550,7 +551,7 @@ def arrange_by_tfidf():
 
     protein_word_content.drop(index=delete_row_indexes, inplace = True)
     print(protein_word_content)
-    pd.DataFrame(protein_word_content).to_csv('created_tables/clean_metapath/seq_to_word_train_tfidf_filtered.csv', sep='\t')
+    pd.DataFrame(protein_word_content).to_csv('created_tables/clean_metapath/seq_to_word_train_tfidf_filtered_novalid2.csv', sep='\t')
 
 def calculate_pmis():
 
@@ -562,7 +563,7 @@ def calculate_pmis():
 
     # Get word counts
     word_counts = pd.read_csv(
-        'created_tables/clean_metapath/all_word_counts.csv',
+        'created_tables/clean_metapath/all_word_counts_novalid2.csv',
         sep="\t",  # tab-separated
         header=None,  # no heading row
         names=["index", "count"]
@@ -580,7 +581,7 @@ def calculate_pmis():
 
     # Get word co-occurance
     word_cooccurance = pd.read_csv(
-        'created_tables/clean_metapath/word_co_occurance_counts.csv',
+        'created_tables/clean_metapath/word_co_occurance_counts_novalid2.csv',
         sep="\t",  # tab-separated
         header=None,  # no heading row
 
@@ -620,7 +621,7 @@ def calculate_pmis():
                 all_PMI_values.append(pmi)
 
     print(word_to_word_PMI)
-    pd.DataFrame(word_to_word_PMI).to_csv('created_tables/clean_metapath/word_to_word_PMI.csv', sep='\t')
+    pd.DataFrame(word_to_word_PMI).to_csv('created_tables/clean_metapath/word_to_word_PMI2.csv', sep='\t')
 
     all_PMI_values.sort(reverse=True)
     print(all_PMI_values[0:500])
@@ -641,7 +642,7 @@ def calculate_pmis():
 
     word_word_edges['source'] = source
     word_word_edges['target'] = target
-    word_word_edges.to_csv('created_tables/clean_metapath/word_to_word_edges.csv', sep='\t')
+    word_word_edges.to_csv('created_tables/clean_metapath/word_to_word_edges2.csv', sep='\t')
 
 def create_similarity_edges():
 
@@ -935,7 +936,372 @@ def create_similarity_edges_jaccard():
     df_hum.to_csv('created_tables/clean_metapath/jaccard_sim_edges_hum.csv', sep='\t')
     df_vir.to_csv('created_tables/clean_metapath/jaccard_sim_edges_vir.csv', sep='\t')
 
+def combine_seq_files():
+
+    hum_train = pd.read_csv(
+        'created_tables/clean_metapath/all_seq_id_and_seq_human_train.csv',
+        sep="\t",  # tab-separated
+        header=None,  # no heading row
+        names=["index", "id", "sequence"]  # set our own names for the columns
+    )
+    hum_train = hum_train.iloc[1:, :]
+    hum_train['id']  = hum_train['id'].astype(int)
+
+    hum_test = pd.read_csv(
+        'created_tables/clean_metapath/all_seq_id_and_seq_human_test.csv',
+        sep="\t",  # tab-separated
+        header=None,  # no heading row
+        names=["index", "id", "sequence"]  # set our own names for the columns
+    )
+    hum_test = hum_test.iloc[1:, :]
+    hum_test['id'] = hum_test['id'].astype(int)
+    hum_test["id"] = hum_test["id"] + 10000
+
+    vir_train = pd.read_csv(
+        'created_tables/clean_metapath/all_seq_id_and_seq_virus_train.csv',
+        sep="\t",  # tab-separated
+        header=None,  # no heading row
+        names=["index", "id", "sequence"]  # set our own names for the columns
+    )
+    vir_train = vir_train.iloc[1:, :]
+    vir_train['id'] = vir_train['id'].astype(int)
+
+    vir_test = pd.read_csv(
+        'created_tables/clean_metapath/all_seq_id_and_seq_virus_test.csv',
+        sep="\t",  # tab-separated
+        header=None,  # no heading row
+        names=["index", "id", "sequence"]  # set our own names for the columns
+    )
+    vir_test = vir_test.iloc[1:, :]
+    vir_test['id'] = vir_test['id'].astype(int)
+    vir_test["id"] = vir_test["id"] + 10000
+
+    # 10.000 added to test ids to make them unique and different from train ids.
+
+    hum_frames = [hum_train, hum_test]
+    hum_df = pd.concat(hum_frames)
+
+    vir_frames = [vir_train, vir_test]
+    vir_df = pd.concat(vir_frames)
+
+    hum_df.drop(columns=hum_df.columns[0], axis=1, inplace=True)
+    vir_df.drop(columns=vir_df.columns[0], axis=1, inplace=True)
+
+    print(hum_df)
+    print(vir_df)
+
+    hum_df.to_csv('created_tables/clean_metapath/hum_all_seq_id.csv', sep='\t')
+    vir_df.to_csv('created_tables/clean_metapath/vir_all_seq_id.csv', sep='\t')
+
+def load_similarity():
+
+    hum_similarity = pd.read_csv(
+        "created_tables/similarity_data/protein_similarities_human.csv",
+        header=None,  # no heading row
+    )
+    arr = hum_similarity.to_numpy()
+    print(hum_similarity)
+
+    # Make id to index map for this:
+    id_index_map = hum_similarity.iloc[:, :1]
+    id_index_map.drop(index=0, inplace=True)
+    id_index_map.index -= 1
+    id_index_map.rename(columns={id_index_map.columns[0]: "id"}, inplace=True)
+    print(id_index_map)
+
+    # Make dataframe into a matrix:
+    hum_similarity.drop(index=0, inplace=True)
+    hum_similarity.drop(columns=hum_similarity.columns[0], axis=1, inplace=True)
+    arr = hum_similarity.to_numpy()
+    print(hum_similarity)
+
+    print(arr)
+    print(arr[0][0])
+
+    # Get id of an index:
+    # Say we have index 50 to 60 what are ids of these prots?
+    value = id_index_map.iloc[[50]]
+    value = value['id'].iloc[0]
+    print(value)
+
+    # Get index of an id:
+    # Say we have index 50 to 60 what are ids of these prots?
+    ind = id_index_map.index[id_index_map['id'] == 13].tolist()
+    print(ind[0])
+
+def divide_validation(tokenizer):
+
+    # seq to seq train with labels içinden valid
+    # için ayıracağımız idleri çıkar,
+    # sonra kalan idler ile tfidf ve pmi kısımlarını
+    # tekrar çalıştır.
+
+    seq_seq_train = pd.read_csv('created_tables/clean_metapath/seq_to_seq_train_withlabels.csv',
+                                   sep="\t",  # tab-separated
+                                   header=None,  # no heading row
+                                   names=["protein_sequence1", "protein_sequence2", "interaction"])
+    seq_seq_train = seq_seq_train.iloc[1:, :]
+
+    train_virus_seq_and_id = pd.read_csv('created_tables/clean_metapath/all_seq_id_and_seq_virus_train.csv',
+                                   sep="\t",  # tab-separated
+                                   header=None,  # no heading row
+                                   names=["id", "sequence"])
+    train_virus_seq_and_id = train_virus_seq_and_id.iloc[1:, :]
+
+
+    valid_frames = seq_seq_train.sample(frac=0.7)
+    seq_seq_train2 = seq_seq_train.drop(valid_frames.index)
+
+    train_virus_list = seq_seq_train2["protein_sequence2"].tolist()
+    remove_valid_index = []
+    print('valid frames:', valid_frames)
+
+    for index, row in valid_frames.iterrows():
+        sequenceid= row['protein_sequence2']
+        print(sequenceid)
+        if sequenceid in train_virus_list:
+            #print('in')
+            remove_valid_index.append(index)
+
+    print(remove_valid_index)
+    valid_frames.drop(remove_valid_index, inplace = True)
+    print('valid frames:', valid_frames)
+
+    seq_seq_train = seq_seq_train.drop(valid_frames.index)
+    print('train frames:', seq_seq_train)
+
+    # Get all valid id list,
+    # Get all train id list:
+
+    train_id = []
+    valid_id = []
+
+    print(valid_frames)
+
+    for index, row in valid_frames.iterrows():
+        sequence1 = row['protein_sequence1']
+        sequence2 = row['protein_sequence2']
+
+        if sequence1 not in valid_id:
+            valid_id.append(sequence1)
+
+        if sequence2 not in valid_id:
+            valid_id.append(sequence2)
+
+    for index, row in seq_seq_train.iterrows():
+        sequence1 = row['protein_sequence1']
+        sequence2 = row['protein_sequence2']
+
+        if sequence1 not in train_id:
+            train_id.append(sequence1)
+
+        if sequence2 not in train_id:
+            train_id.append(sequence2)
+
+    # Write all to files
+    valid_frames.to_csv('created_tables/clean_metapath/seq_to_seq_valid_withlabels2.csv', sep='\t')
+    seq_seq_train.to_csv('created_tables/clean_metapath/seq_to_seq_train_withlabels_novalid2.csv', sep='\t')
+
+    df1 = pd.DataFrame(train_id, columns=['id'])
+    df2 = pd.DataFrame(valid_id, columns=['id'])
+
+    print(df1)
+    print(df2)
+
+    df1.to_csv('created_tables/clean_metapath/all_seq_id_train_novalid2.csv', sep='\t')
+    df2.to_csv('created_tables/clean_metapath/all_seq_id_valid2.csv', sep='\t')
+
+    # Run word_to_id
+
+    word_id_map_train = pd.read_csv('created_tables/clean_metapath/word_id_map_train.csv',
+                                    sep="\t",  # tab-separated
+                                    header=None,  # no heading row
+                                    names=["id", "word"])
+    word_id_map_train = word_id_map_train.iloc[1:, :]
+
+
+    seq_id_map_train = pd.read_csv('created_tables/clean_metapath/seq_id_map_train.csv',
+                                   sep="\t",  # tab-separated
+                                   header=None,  # no heading row
+                                   names=["id", "sequence", "type"])
+    seq_id_map_train = seq_id_map_train.iloc[1:, :]
+
+
+    # Find sequences that exist in seq_seq_train and not in seq_seq_train_with_valid
+
+    #######################
+    #####PMI###############
+    #######################
+
+    # Go over train frames without validation
+    dft = word_id_map_train
+    train_frames = seq_seq_train
+
+    word_counts = np.zeros((len(dft)))
+    print(len(dft))
+    word_to_word_counts = np.zeros((len(dft), len(dft)))
+
+    seq_id_len = len(seq_id_map_train)
+
+    for index, row in train_frames.iterrows():
+        if index % 10 == 0:
+            print('word count1:', index)
+
+        sequence1id = row['protein_sequence1']
+        sequence2id = row['protein_sequence2']
+
+        # Get sequences:
+        row1 = seq_id_map_train.loc[seq_id_map_train['id'] == sequence1id]
+        row2 = seq_id_map_train.loc[seq_id_map_train['id'] == sequence2id]
+
+        sequence1 = row1['sequence'].values[0]
+        sequence2 = row2['sequence'].values[0]
+
+        encoded1 = tokenizer.encode(sequence1)
+        encoded1 = encoded1.tokens
+        encoded2 = tokenizer.encode(sequence2)
+        encoded2 = encoded2.tokens
+
+        # for token in encoded1:
+        for y in range(len(encoded1)):
+            # find the id of this token in df:
+            row = dft.loc[dft['word'] == encoded1[y]]
+            id = row['id'].values[0]
+            # add one to corresponding count
+            word_counts[int(id) - seq_id_len] += 1
+
+            # Check word co-occurances:
+            for z in range(20):
+                if y + z + 1 < len(encoded1):
+                    token_next = encoded1[y + z + 1]
+                    # get the id of token_next
+                    row = dft.loc[dft['word'] == token_next]
+                    id2 = row['id'].values[0]
+                    # add the co-occurance to the matrix:
+                    word_to_word_counts[int(id) - seq_id_len][int(id2) - seq_id_len] += 1
+
+        # for token in encoded2:
+        for y in range(len(encoded2)):
+            # find the id of this token in df:
+            row = dft.loc[dft['word'] == encoded2[y]]
+            id = row['id'].values[0]
+            # add one to corresponding count
+            word_counts[int(id) - seq_id_len] += 1
+
+            # Check word co-occurances:
+            for z in range(20):
+                if y + z + 1 < len(encoded2):
+                    token_next = encoded2[y + z + 1]
+                    # get the id of token_next
+                    row = dft.loc[dft['word'] == token_next]
+                    id2 = row['id'].values[0]
+                    # add the co-occurance to the matrix:
+                    word_to_word_counts[int(id) - seq_id_len][int(id2) - seq_id_len] += 1
+
+    # Write counts to file:
+    pd.DataFrame(word_counts).to_csv('created_tables/clean_metapath/all_word_counts_novalid2.csv', sep='\t')
+    pd.DataFrame(word_to_word_counts).to_csv('created_tables/clean_metapath/word_co_occurance_counts_novalid2.csv', sep='\t')
+
+def divide_valid_tfidf(tokenizer):
+
+    # Get all seq id valid
+    # Also get seq id map train and word id map train
+    # if sequence does not exist in seq id valid
+    # remove it from seq id map train
+    # run the code
+
+    # Get seq to word train too
+    # From there, also remove sequences that does not exist
+    # in valid, and save it as no valid.
+
+    all_seq_id_valid = pd.read_csv('created_tables/clean_metapath/all_seq_id_valid2.csv',
+                                sep="\t",  # tab-separated
+                                header=None,  # no heading row
+                                names=["id"])
+    all_seq_id_valid = all_seq_id_valid.iloc[1:, :]
+    valid_id_list = all_seq_id_valid['id'].tolist()
+
+    all_seq_id_train = pd.read_csv('created_tables/clean_metapath/all_seq_id_train.csv',
+                                   sep="\t",  # tab-separated
+                                   header=None,  # no heading row
+                                   names=["id"])
+    all_seq_id_train = all_seq_id_train.iloc[1:, :]
+    train_id_list = all_seq_id_train['id'].tolist()
+
+    seq_id_map_train = pd.read_csv('created_tables/clean_metapath/seq_id_map_train.csv',
+                                   sep="\t",  # tab-separated
+                                   header=None,  # no heading row
+                                   names=["id", "sequence", "type"])
+    seq_id_map_train = seq_id_map_train.iloc[1:, :]
+
+    word_id_map_train = pd.read_csv('created_tables/clean_metapath/word_id_map_train.csv',
+                                   sep="\t",  # tab-separated
+                                   header=None,  # no heading row
+                                   names=["id", "word"])
+    word_id_map_train = word_id_map_train.iloc[1:, :]
+
+    seq_to_word_train = pd.read_csv('created_tables/clean_metapath/seq_to_word_train.csv',
+                                    sep="\t",  # tab-separated
+                                    header=None,  # no heading row
+                                    names=["source", "target"])
+    seq_to_word_train = seq_to_word_train.iloc[1:, :]
+
+    drop_index = []
+    for i in range(len(seq_id_map_train)):
+        id = seq_id_map_train.loc[i, "id"]
+        if id in valid_id_list:
+            if id not in train_id_list:
+                drop_index.append(i)
+
+    print('dropped this many:', len(drop_index))
+    seq_id_map_train.drop(drop_index, axis=0, inplace=True)
+
+    print(seq_id_map_train)
+    pd.DataFrame(seq_id_map_train).to_csv('created_tables/clean_metapath/seq_id_map_train_novalid2.csv', sep='\t')
+
+    drop_index = []
+    for i in range(len(seq_to_word_train)):
+        id = seq_to_word_train.loc[i, "source"]
+        id = int(float(id))
+        if id in valid_id_list:
+            if id not in train_id_list:
+                drop_index.append(i)
+
+    print('dropped this many:', len(drop_index))
+    seq_to_word_train.drop(drop_index, axis=0, inplace=True)
+
+    print(seq_to_word_train)
+    pd.DataFrame(seq_to_word_train).to_csv('created_tables/clean_metapath/seq_to_word_train_novalid2.csv', sep='\t')
+
+    # Run seq_to_word
+    # Create tfidf file:
+    seq_to_word_counts = np.zeros((len(seq_id_map_train), len(word_id_map_train)))
+    # Remember that word id map starts with id: 2741
+    # In matrix, 0 for word will correspond to id 2741
+
+    for row_index, row in seq_id_map_train.iterrows():
+
+        sequence = row['sequence']
+        encoded = tokenizer.encode(sequence)
+        encoded = encoded.tokens
+
+        # Find index of tokens (words)
+        for col_index, row in word_id_map_train.iterrows():
+            word = row['word']
+            # if word exists in encoded [index1][index2] = 1
+            if word in encoded:
+                # Count how many times it appears:
+                count = encoded.count(word)
+                seq_to_word_counts[int(row_index)][int(col_index)] += count
+                if seq_to_word_counts[int(row_index)][int(col_index)] > 1:
+                    print('bigger than 1')
+
+    print(seq_to_word_counts)
+    pd.DataFrame(seq_to_word_counts).to_csv('created_tables/seq_to_word_counts_novalid2.csv', sep='\t')
+
+
 def main():
+
 
     # Tokenizer train
     #tokenizer = train_tokenizer()
@@ -943,7 +1309,7 @@ def main():
     #with open('tokenizer/tokenizer.pickle', 'wb') as handle:
     #    pickle.dump(tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    train_frames, test_frames = read_datasets()
+    train_frames, test_frames= read_datasets()
 
     # load tokenizer
     with open('tokenizer/tokenizer.pickle', 'rb') as handle:
@@ -952,11 +1318,13 @@ def main():
     print(train_frames)
     print(test_frames)
 
+    """
     # Unique sequences to id mapping
-    #seq_id_map_train, seq_id_map_test = seq_to_id_with_types(train_frames, test_frames)
+    seq_id_map_train, seq_id_map_test = seq_to_id_with_types(train_frames, test_frames)
 
     # Unique words to id mapping
-    #word_id_map_train, word_id_map_test = word_to_id(seq_id_map_train, seq_id_map_test, tokenizer, train_frames)
+    word_id_map_train, word_id_map_test = word_to_id(seq_id_map_train, seq_id_map_test, tokenizer, train_frames)
+
 
     # Load files:
     seq_id_map_train = pd.read_csv('created_tables/clean_metapath/seq_id_map_train.csv',
@@ -994,6 +1362,18 @@ def main():
     #calculate_pmis()
     #create_similarity_edges()
     create_similarity_edges_jaccard()
+
+    
+
+    #combine_seq_files()
+
+    load_similarity()
+    """
+
+    #divide_validation(tokenizer)
+    #calculate_pmis()
+    #divide_valid_tfidf(tokenizer)
+    arrange_by_tfidf()
 
 if __name__ == '__main__':
     main()
