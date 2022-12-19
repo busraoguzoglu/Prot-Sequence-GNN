@@ -37,7 +37,7 @@ def create_graph():
 
     # Prot-word edges:
     protein_word_content = pd.read_csv(
-        'created_tables/clean_metapath/seq_to_word_train_tfidf_filtered.csv',
+        'created_tables/clean_metapath/seq_to_word_train_tfidf_filtered_novalid2.csv',
         sep="\t",  # tab-separated
         header=None,  # no heading row
     )
@@ -51,7 +51,7 @@ def create_graph():
 
     # Prot-prot interaction edges:
     protein_interactions_train_labels = pd.read_csv(
-        'created_tables/clean_metapath/seq_to_seq_train_withlabels.csv',
+        'created_tables/clean_metapath/seq_to_seq_train_withlabels_novalid2.csv',
         sep="\t",  # tab-separated
         header=None,  # no heading row
         names=["source", "target", "interaction_type"]  # set our own names for the columns
@@ -59,18 +59,15 @@ def create_graph():
 
     # Need to make all edges have unique id
     train_labels_index = []
-    for i in range(9753):
+    #9753
+    #8778
+    for i in range(9519):
         train_labels_index.append(i + len(protein_word_content) + 1)
 
     protein_interactions_train_labels = protein_interactions_train_labels.iloc[1:, :]
     protein_interactions_train_labels['index'] = train_labels_index
     protein_interactions_train_labels.set_index(['index'], inplace=True)
     protein_interactions_train_labels = protein_interactions_train_labels.astype(int)
-
-    print('protein_interactions_train_labels (interaction edges):', protein_interactions_train_labels)
-
-    interacts = protein_interactions_train_labels[protein_interactions_train_labels['interaction_type'] == 1]
-    not_interacts = protein_interactions_train_labels[protein_interactions_train_labels['interaction_type'] == 0]
 
     # Word-word edges:
     # First edge id should be 160517 + 1
@@ -94,96 +91,6 @@ def create_graph():
     word_word_edges = word_word_edges.astype(int)
     print('word_word_edges:', word_word_edges)
 
-    """
-    #################################################################################
-    # Similarity Edges #
-    #################################################################################
-    # Add human-human virus-virus similarity edges:
-    hum_similarity_edges_lev = pd.read_csv(
-        'created_tables/clean_metapath/lev_dist_edges_hum.csv',
-        sep="\t",  # tab-separated
-        header=None,  # no heading row
-        names=["source", "target"]  # set our own names for the columns
-    )
-    hum_similarity_edges_lev = hum_similarity_edges_lev.iloc[1:, :]
-
-    # Need to make all edges have unique id
-    hum_similarity_edges_index = []
-    edge_start = word_word_edges_index[len(word_word_edges_index)-1]
-
-    for i in range(len(hum_similarity_edges_lev)):
-        hum_similarity_edges_index.append(i + edge_start + 1)
-
-    hum_similarity_edges_lev['index'] = hum_similarity_edges_index
-    hum_similarity_edges_lev.set_index(['index'], inplace=True)
-    hum_similarity_edges_lev = hum_similarity_edges_lev.astype(int)
-    print('hum_similarity_edges: (Levenstein)', hum_similarity_edges_lev)
-
-    vir_similarity_edges_lev = pd.read_csv(
-        'created_tables/clean_metapath/lev_dist_edges_vir.csv',
-        sep="\t",  # tab-separated
-        header=None,  # no heading row
-        names=["source", "target"]  # set our own names for the columns
-    )
-    vir_similarity_edges_lev = vir_similarity_edges_lev.iloc[1:, :]
-
-    # Need to make all edges have unique id
-    vir_similarity_edges_index = []
-    edge_start = hum_similarity_edges_index[len(hum_similarity_edges_index)-1]
-
-    for i in range(len(vir_similarity_edges_lev)):
-        vir_similarity_edges_index.append(i + edge_start + 1)
-
-    vir_similarity_edges_lev['index'] = vir_similarity_edges_index
-    vir_similarity_edges_lev.set_index(['index'], inplace=True)
-    vir_similarity_edges_lev = vir_similarity_edges_lev.astype(int)
-    print('vir_similarity_edges: (Levenstein)', vir_similarity_edges_lev)
-
-
-    #################################################################################
-    # Jaccard Edges #
-    #################################################################################
-    # Add human-human virus-virus similarity edges:
-    hum_similarity_edges_jac = pd.read_csv(
-        'created_tables/clean_metapath/jaccard_sim_edges_hum.csv',
-        sep="\t",  # tab-separated
-        header=None,  # no heading row
-        names=["source", "target"]  # set our own names for the columns
-    )
-    hum_similarity_edges_jac = hum_similarity_edges_jac.iloc[1:, :]
-
-    # Need to make all edges have unique id
-    hum_similarity_edges_index = []
-    edge_start = vir_similarity_edges_index[len(vir_similarity_edges_index) - 1]
-
-    for i in range(len(hum_similarity_edges_jac)):
-        hum_similarity_edges_index.append(i + edge_start + 1)
-
-    hum_similarity_edges_jac['index'] = hum_similarity_edges_index
-    hum_similarity_edges_jac.set_index(['index'], inplace=True)
-    hum_similarity_edges_jac = hum_similarity_edges_jac.astype(int)
-    print('hum_similarity_edges (Jaccard):', hum_similarity_edges_jac)
-
-    vir_similarity_edges_jac = pd.read_csv(
-        'created_tables/clean_metapath/jaccard_sim_edges_vir.csv',
-        sep="\t",  # tab-separated
-        header=None,  # no heading row
-        names=["source", "target"]  # set our own names for the columns
-    )
-    vir_similarity_edges_jac = vir_similarity_edges_jac.iloc[1:, :]
-
-    # Need to make all edges have unique id
-    vir_similarity_edges_index = []
-    edge_start = hum_similarity_edges_index[len(hum_similarity_edges_index) - 1]
-
-    for i in range(len(vir_similarity_edges_jac)):
-        vir_similarity_edges_index.append(i + edge_start + 1)
-
-    vir_similarity_edges_jac['index'] = vir_similarity_edges_index
-    vir_similarity_edges_jac.set_index(['index'], inplace=True)
-    vir_similarity_edges_jac = vir_similarity_edges_jac.astype(int)
-    print('hum_similarity_edges (Jaccard):', vir_similarity_edges_jac)
-    """
 
     #################################################################################
     # Needleman Wunsch #
@@ -311,23 +218,13 @@ def create_graph():
     vir_nodes = IndexedArray(index=vir)
     word_nodes = IndexedArray(index=word)
 
-    # Whole graph:
-    #protein_graph_train = StellarGraph({"human": hum_nodes, "virus": vir_nodes, "word": word_nodes},
-    #                             edges={'contains': protein_word_content, 'interacts': interacts, 'not_interacts': not_interacts, 'pmi': word_word_edges,
-    #                                    'hum_similarity_lev': hum_similarity_edges_lev, 'vir_similarity_lev': vir_similarity_edges_lev,
-    #                                    'hum_similarity_jac': hum_similarity_edges_jac, 'vir_similarity_jac': vir_similarity_edges_jac})
+    print('protein_interactions_train_labels (interaction edges):', protein_interactions_train_labels)
 
-    # No word notes, only similarity edges:
-    #protein_graph_train = StellarGraph({"human": hum_nodes, "virus": vir_nodes},
-    #                                   edges={'interacts': interacts,
-    #                                          'not_interacts': not_interacts,
-    #                                          'hum_similarity_lev': hum_similarity_edges_lev,
-    #                                          'vir_similarity_lev': vir_similarity_edges_lev})
+    # Get %10 of this as validation set.
+    # For all sequences in this, remove corresponding nodes&edges
 
-    # No similarity edges:
-    #protein_graph_train = StellarGraph({"human": hum_nodes, "virus": vir_nodes, "word": word_nodes},
-    #                             edges={'contains': protein_word_content, 'interacts': interacts, 'not_interacts': not_interacts, 'pmi': word_word_edges})
-    #
+    interacts = protein_interactions_train_labels[protein_interactions_train_labels['interaction_type'] == 1]
+    not_interacts = protein_interactions_train_labels[protein_interactions_train_labels['interaction_type'] == 0]
 
     protein_graph_train = StellarGraph({"human": hum_nodes, "virus": vir_nodes, "word": word_nodes},
                                        edges={'contains': protein_word_content, 'interacts': interacts,
@@ -442,6 +339,198 @@ def get_train_embeddings(node_embeddings_train):
 
     print('train data:', train_data)
     return train_data
+
+def get_valid_embeddings(node_embeddings_train):
+
+    # Get valid set and create test embeddings
+    # Test embeddings will be calculated using the similarity of
+    # sequences between train and test sets
+    protein_interactions_test = pd.read_csv(
+        'created_tables/clean_metapath/seq_to_seq_valid_withlabels2.csv',
+        sep="\t",  # tab-separated
+        header=None,  # no heading row
+        names=["protein_sequence1", "protein_sequence2", "label"]  # set our own names for the columns
+    )
+    protein_interactions_test = protein_interactions_test.iloc[1:, :]
+    protein_interactions_test = protein_interactions_test.astype(int)
+    print(protein_interactions_test)
+
+    # Get seq-id-map train and seq-id-map test:
+    seq_to_id_train = pd.read_csv(
+        'created_tables/clean_metapath/seq_id_map_train.csv',
+        sep="\t",  # tab-separated
+        header=None,  # no heading row
+        names=["id", "sequence", "type"]  # set our own names for the columns
+    )
+    seq_to_id_train = seq_to_id_train.iloc[1:, :]
+    seq_to_id_train['id'] = seq_to_id_train['id'].astype('int')
+    seq_to_id_train.set_index(['id'], inplace=True)
+    print(seq_to_id_train)
+
+    seq_to_id_test = pd.read_csv(
+        'created_tables/clean_metapath/seq_id_map_train.csv',
+        sep="\t",  # tab-separated
+        header=None,  # no heading row
+        names=["id", "sequence", "type"]  # set our own names for the columns
+    )
+    seq_to_id_test = seq_to_id_test.iloc[1:, :]
+    seq_to_id_test['id'] = seq_to_id_test['id'].astype('int')
+    seq_to_id_test.set_index(['id'], inplace=True)
+    print('seq to id test:', seq_to_id_test)
+
+    ###############################################################################################
+    ############# Read similarity data, create matrices and id maps ###############################
+    ###############################################################################################
+
+    # Human
+    hum_similarity = pd.read_csv(
+        "created_tables/similarity_data/protein_similarities_human.csv",
+        header=None,  # no heading row
+    )
+
+    # Make id to index map for this:
+    id_index_map_hum = hum_similarity.iloc[:, :1]
+    id_index_map_hum.drop(index=0, inplace=True)
+    id_index_map_hum.index -= 1
+    id_index_map_hum.rename(columns={id_index_map_hum.columns[0]: "id"}, inplace=True)
+    id_index_map_hum['id'] = id_index_map_hum['id'].astype('int')
+
+    # Make dataframe into a matrix:
+    hum_similarity.drop(index=0, inplace=True)
+    hum_similarity.drop(columns=hum_similarity.columns[0], axis=1, inplace=True)
+    arr_hum = hum_similarity.to_numpy()
+
+    # Virus
+    vir_similarity = pd.read_csv(
+        "created_tables/similarity_data/protein_similarities_vir.csv",
+        header=None,  # no heading row
+    )
+
+    # Make id to index map for this:
+    id_index_map_vir = vir_similarity.iloc[:, :1]
+    id_index_map_vir.drop(index=0, inplace=True)
+    id_index_map_vir.index -= 1
+    id_index_map_vir.rename(columns={id_index_map_vir.columns[0]: "id"}, inplace=True)
+    id_index_map_vir['id'] = id_index_map_vir['id'].astype('int')
+
+    # Make dataframe into a matrix:
+    vir_similarity.drop(index=0, inplace=True)
+    vir_similarity.drop(columns=vir_similarity.columns[0], axis=1, inplace=True)
+    arr_vir = vir_similarity.to_numpy()
+
+    # Change ids with embeddings:
+    # Go over test data, calculate similarities, and calculate embeddings:
+    test_data = pd.DataFrame(columns=['embedding', 'label'])
+
+    for row_index, row in protein_interactions_test.iterrows():
+
+        # +10000 for test id
+        sequence1id = row['protein_sequence1']
+        sequence2id = row['protein_sequence2']
+
+        index_seq1 = id_index_map_hum.index[id_index_map_hum['id'] == sequence1id].tolist()[0]
+        index_seq2 = id_index_map_vir.index[id_index_map_vir['id'] == sequence2id].tolist()[0]
+
+        label = row['label']
+
+        sequence1_similarity_values = []
+        sequence2_similarity_values = []
+        sequence1_similarity_trainseqid = []
+        sequence2_similarity_trainseqid = []
+
+        #########################################################################
+
+        # For each sequence, find the most similar 5 train sequences:
+
+        # ids go 0 to 2647
+
+        for id in range(0, 2648):
+
+            hum = 0
+            # Need to find if this id is human or virus:
+            index_id_list = id_index_map_hum.index[id_index_map_hum['id'] == id].tolist()
+            if index_id_list:
+                index_id = index_id_list[0]
+                hum = 1
+            else:
+                index_id = id_index_map_vir.index[id_index_map_vir['id'] == id].tolist()[0]
+
+            # get the similarity value for given ids:
+            if hum:
+                seq1sim = arr_hum[index_seq1][index_id]
+                sequence1_similarity_values.append(seq1sim)
+                sequence1_similarity_trainseqid.append(id)
+            else:
+                seq2sim = arr_vir[index_seq2][index_id]
+                sequence2_similarity_values.append(seq2sim)
+                sequence2_similarity_trainseqid.append(id)
+
+        # Sort similarity values, get most similar 5 ids for seq1 and seq2
+        sequence1_similarity_values, sequence1_similarity_trainseqid = zip(
+            *sorted(zip(sequence1_similarity_values, sequence1_similarity_trainseqid), reverse=True))
+        sequence2_similarity_values, sequence2_similarity_trainseqid = zip(
+            *sorted(zip(sequence2_similarity_values, sequence2_similarity_trainseqid), reverse=True))
+
+        # Now get the embedding of these sequences for each,
+        # and get the average. This will give embedding of the test sequence:
+
+        # For sequence1:
+        # ar1 = node_embeddings_train[sequence1_similarity_trainseqid[0]]
+        # ar2 = node_embeddings_train[sequence1_similarity_trainseqid[1]]
+        # seq1emb = ((2*ar1) + ar2) / 3
+        # seq1emb = ar1
+
+        # Get more than %90 similar embeddings and take average of them:
+        # At most 10 is enough
+        avg_list = []
+        sum = node_embeddings_train[sequence1_similarity_trainseqid[0]]
+        for i in range(1, 10):
+            if sequence1_similarity_values[i] > 99:
+                avg_list.append(node_embeddings_train[sequence1_similarity_trainseqid[i]])
+                sum += node_embeddings_train[sequence1_similarity_trainseqid[i]]
+            else:
+                continue
+
+        diff_size = 0
+        if len(avg_list) > 1:
+            seq1emb = (sum - 100) / (len(avg_list))
+            diff_size +=1
+
+        else:
+            seq1emb = sum / (len(avg_list) + 1)
+
+        # For sequence2:
+        # ar1 = node_embeddings_train[sequence2_similarity_trainseqid[0]]
+        # ar2 = node_embeddings_train[sequence2_similarity_trainseqid[1]]
+        # seq2emb = ((2*ar1) + ar2) / 3
+        # seq2emb = ar1
+
+        # Get more than %90 similar embeddings and take average of them:
+        # At most 10 is enough
+        avg_list = []
+        sum = node_embeddings_train[sequence2_similarity_trainseqid[0]]
+        for i in range(1, 10):
+            if sequence2_similarity_values[i] > 99:
+                avg_list.append(node_embeddings_train[sequence2_similarity_trainseqid[i]])
+                sum += node_embeddings_train[sequence2_similarity_trainseqid[i]]
+            else:
+                continue
+
+        diff_size = 0
+        if len(avg_list) > 1:
+            seq2emb = (sum-100) / (len(avg_list))
+            diff_size += 1
+
+        else:
+            seq2emb = sum / (len(avg_list) + 1)
+
+        sequences_appended = numpy.concatenate((seq1emb, seq2emb), axis=0)
+        new_row = {'embedding': sequences_appended, 'label': label}
+        test_data = test_data.append(new_row, ignore_index=True)
+
+    print('valid data:', test_data)
+    return test_data
+
 
 def get_test_embeddings(node_embeddings_train):
 
@@ -589,7 +678,7 @@ def get_test_embeddings(node_embeddings_train):
         avg_list = []
         sum = node_embeddings_train[sequence1_similarity_trainseqid[0]]
         for i in range(1, 10):
-            if sequence1_similarity_values[i] > 99:
+            if sequence1_similarity_values[i] > 80:
                 avg_list.append(node_embeddings_train[sequence1_similarity_trainseqid[i]])
                 sum += node_embeddings_train[sequence1_similarity_trainseqid[i]]
             else:
@@ -636,6 +725,7 @@ def main():
     # Get train/test datasets for classifier
     train_data = get_train_embeddings(node_embeddings_train)
     test_data = get_test_embeddings(node_embeddings_train)
+    valid_data = get_valid_embeddings(node_embeddings_train)
 
     #######################################################
     #### Training ####
@@ -644,11 +734,14 @@ def main():
     # Training the classifier #
     train_X = train_data[['embedding']]
     test_X = test_data[['embedding']]
+    valid_X = valid_data[['embedding']]
     train_labels = train_data[['label']]
     test_labels = test_data[['label']]
+    valid_labels = valid_data[['label']]
 
     train_X, train_Y = shuffle(train_X, train_labels, random_state=0)
     test_X, test_Y = shuffle(test_X, test_labels, random_state=0)
+    valid_X, valid_Y = shuffle(valid_X, valid_labels, random_state=0)
 
     train_X_list = []
     for row_index, row in train_X.iterrows():
@@ -660,6 +753,11 @@ def main():
         emb = row['embedding']
         test_X_list.append(emb)
 
+    valid_X_list = []
+    for row_index, row in valid_X.iterrows():
+        emb = row['embedding']
+        valid_X_list.append(emb)
+
     train_Y_list = []
     for row_index, row in train_Y.iterrows():
         lab = row['label']
@@ -670,16 +768,27 @@ def main():
         lab = row['label']
         test_Y_list.append(lab)
 
+    valid_Y_list = []
+    for row_index, row in valid_Y.iterrows():
+        lab = row['label']
+        valid_Y_list.append(lab)
+
     train_X = train_X_list
     test_X = test_X_list
+    valid_X = valid_X_list
     train_Y = train_Y_list
     test_Y = test_Y_list
+    valid_Y = valid_Y_list
+
 
     # Classification:
 
     # 2- Tensorflow:
     test_X = numpy.array(test_X)
     test_Y = numpy.array(test_Y)
+
+    valid_X = numpy.array(valid_X)
+    valid_Y = numpy.array(valid_Y)
 
     train_X = numpy.asarray(train_X).astype(numpy.float32)
     train_Y = numpy.asarray(train_Y).astype(numpy.float32)
@@ -710,10 +819,13 @@ def main():
         # model.fit(train_X, train_Y, validation_data=(val_X, val_Y), batch_size=batch_size, epochs=epochs, verbose=0)
         model.fit(train_X, train_Y, batch_size=batch_size, epochs=epochs, verbose=0)
 
-        # y_true = val_Y
-        # y_pred_label = model.predict(val_X)
-        y_true = test_Y
-        y_pred_label = model.predict(test_X)
+        # Valid result
+        y_true = valid_Y
+        y_pred_label = model.predict(valid_X)
+
+        # Get test result later
+        #y_true = test_Y
+        #y_pred_label = model.predict(test_X)
         y_pred_label = get_predictions(y_pred_label)
 
         y_pred_label = list(y_pred_label)
@@ -721,8 +833,6 @@ def main():
 
         print('y_pred_label', y_pred_label)
         print('y_true', y_true)
-
-        # y_pred_label = get_predictions(y_pred_label)
 
         tn, fp, fn, tp = confusion_matrix(y_true, y_pred_label).ravel()
         recall = recall_score(y_true, y_pred_label)
